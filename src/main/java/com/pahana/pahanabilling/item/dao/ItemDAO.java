@@ -2,6 +2,8 @@ package com.pahana.pahanabilling.item.dao;
 
 import java.sql.*;
 import java.util.*;
+import com.pahana.pahanabilling.item.entity.Item;
+
 
 public class ItemDAO {
     private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
