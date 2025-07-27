@@ -15,5 +15,17 @@ public class ItemService {
     public List<Item> listItems() throws Exception {
         return itemDAO.getAllItems();
     }
+    public Item getItemById(String itemId) throws Exception {
+        return itemDAO.findById(itemId);
+    }
+
+    public void updateItem(Item item) throws Exception {
+        itemDAO.update(item);
+    }
+
+    public void deleteItem(String itemId) throws Exception {
+        itemDAO.delete(itemId);
+    }
+
 }
 

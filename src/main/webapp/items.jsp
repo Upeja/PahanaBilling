@@ -18,8 +18,10 @@
             <td>${item.itemId}</td>
             <td>${item.name}</td>
             <td>${item.price}</td>
+
         </tr>
     </c:forEach>
+
 </table>
 </body>
 </html>
