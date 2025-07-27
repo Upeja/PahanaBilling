@@ -18,6 +18,11 @@
             <td>${item.itemId}</td>
             <td>${item.name}</td>
             <td>${item.price}</td>
+            <td>
+                <a href="${pageContext.request.contextPath}/items/edit?itemId=${item.itemId}">Edit</a> |
+                <a href="${pageContext.request.contextPath}/items/delete?itemId=${item.itemId}"
+                   onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+            </td>
 
         </tr>
     </c:forEach>
