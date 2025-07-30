@@ -14,7 +14,6 @@ import java.util.List;
 public class ItemServlet extends HttpServlet {
     private final ItemService itemService = new ItemService();
 
-    // Handle Add and Update
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -23,24 +22,35 @@ public class ItemServlet extends HttpServlet {
         String itemId = req.getParameter("itemId");
         String name = req.getParameter("name");
         double price = Double.parseDouble(req.getParameter("price"));
+        Item item = new Item(itemId, name, price);
 
         try {
-            Item item = new Item(itemId, name, price);
+            if (!item.isValid()) {
+                req.setAttribute("error", "❌ Invalid item data.");
+                forwardToList(req, resp);
+                return;
+            }
 
             if ("/items/edit".equals(path)) {
                 itemService.updateItem(item);
             } else {
-                itemService.addItem(item); // default to add
+                if (itemService.itemExists(itemId)) {
+                    req.setAttribute("error", "⚠️ Item ID already exists.");
+                    forwardToList(req, resp);
+                    return;
+                }
+                itemService.addItem(item);
             }
 
             resp.sendRedirect(req.getContextPath() + "/items");
+
         } catch (Exception e) {
             e.printStackTrace();
-            resp.getWriter().write("Error processing item: " + e.getMessage());
+            req.setAttribute("error", "Error processing item: " + e.getMessage());
+            forwardToList(req, resp);
         }
     }
 
-    // Handle View, Edit Form and Delete
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -59,14 +69,33 @@ public class ItemServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/items");
 
             } else { // "/items"
-                List<Item> items = itemService.listItems();
+                String search = req.getParameter("search");
+                List<Item> items;
+                if (search != null && !search.trim().isEmpty()) {
+                    items = itemService.searchItems(search.trim());
+                    req.setAttribute("search", search);
+                } else {
+                    items = itemService.listItems();
+                }
                 req.setAttribute("items", items);
                 req.getRequestDispatcher("/WEB-INF/views/items.jsp").forward(req, resp);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            resp.getWriter().write("Error: " + e.getMessage());
+            req.setAttribute("error", "Error: " + e.getMessage());
+            forwardToList(req, resp);
+        }
+    }
+
+    private void forwardToList(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        try {
+            req.setAttribute("items", itemService.listItems());
+            req.getRequestDispatcher("/WEB-INF/views/items.jsp").forward(req, resp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.getWriter().write("Error loading item list: " + e.getMessage());
         }
     }
 }

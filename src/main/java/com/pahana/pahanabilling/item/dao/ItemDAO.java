@@ -78,4 +78,34 @@ public class ItemDAO {
             stmt.executeUpdate();
         }
     }
+    public boolean exists(String itemId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM items WHERE item_id = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, itemId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+    public List<Item> searchByName(String keyword) throws SQLException {
+        List<Item> results = new ArrayList<>();
+        String sql = "SELECT * FROM items WHERE name LIKE ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + keyword + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(new Item(
+                        rs.getString("item_id"),
+                        rs.getString("name"),
+                        rs.getDouble("price")
+                ));
+            }
+        }
+        return results;
+    }
+
 }

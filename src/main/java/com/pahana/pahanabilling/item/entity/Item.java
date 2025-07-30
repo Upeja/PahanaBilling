@@ -13,7 +13,6 @@ public class Item {
         this.price = price;
     }
 
-    // Getters and Setters
     public String getItemId() { return itemId; }
     public void setItemId(String itemId) { this.itemId = itemId; }
 
@@ -22,4 +21,19 @@ public class Item {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "itemId='" + itemId + '\'' +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                '}';
+    }
+
+    public boolean isValid() {
+        return itemId != null && !itemId.isEmpty()
+                && name != null && !name.isEmpty()
+                && price >= 0;
+    }
 }

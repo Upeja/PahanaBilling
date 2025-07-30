@@ -15,6 +15,7 @@ public class ItemService {
     public List<Item> listItems() throws Exception {
         return itemDAO.getAllItems();
     }
+
     public Item getItemById(String itemId) throws Exception {
         return itemDAO.findById(itemId);
     }
@@ -27,5 +28,11 @@ public class ItemService {
         itemDAO.delete(itemId);
     }
 
-}
+    public boolean itemExists(String itemId) throws Exception {
+        return itemDAO.exists(itemId);
+    }
 
+    public List<Item> searchItems(String keyword) throws Exception {
+        return itemDAO.searchByName(keyword);
+    }
+}
