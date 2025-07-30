@@ -7,7 +7,17 @@ public class Customer {
     private String phone;
     private int unitsConsumed;
 
-    // Getters and setters
+    public Customer() {}
+
+    public Customer(String accountNumber, String name, String address, String phone, int unitsConsumed) {
+        this.accountNumber = accountNumber;
+        this.name = name;
+        this.address = address;
+        this.phone = phone;
+        this.unitsConsumed = unitsConsumed;
+    }
+
+    // Getters and Setters
     public String getAccountNumber() { return accountNumber; }
     public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
 
@@ -22,4 +32,24 @@ public class Customer {
 
     public int getUnitsConsumed() { return unitsConsumed; }
     public void setUnitsConsumed(int unitsConsumed) { this.unitsConsumed = unitsConsumed; }
+
+    // Validation
+    public boolean isValid() {
+        return accountNumber != null && !accountNumber.isEmpty()
+                && name != null && !name.isEmpty()
+                && address != null && !address.isEmpty()
+                && phone != null && !phone.isEmpty()
+                && unitsConsumed >= 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "accountNumber='" + accountNumber + '\'' +
+                ", name='" + name + '\'' +
+                ", address='" + address + '\'' +
+                ", phone='" + phone + '\'' +
+                ", unitsConsumed=" + unitsConsumed +
+                '}';
+    }
 }
