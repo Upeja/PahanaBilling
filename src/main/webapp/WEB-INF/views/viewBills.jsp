@@ -1,16 +1,35 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: upeja
-  Date: 27/07/2025
-  Time: 22:03
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
-    <title>Title</title>
+    <title>📋 Bill History</title>
 </head>
 <body>
+<h2>📋 Previous Bills</h2>
 
+<!-- ✅ Table of Bills -->
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Bill ID</th>
+        <th>Customer ID</th>
+        <th>Item ID</th>
+        <th>Units</th>
+        <th>Total Amount (LKR)</th>
+        <th>Date</th>
+    </tr>
+    <c:forEach var="bill" items="${bills}">
+        <tr>
+            <td>${bill.billId}</td>
+            <td>${bill.customerId}</td>
+            <td>${bill.itemId}</td>
+            <td>${bill.units}</td>
+            <td>${bill.totalAmount}</td>
+            <td>${bill.dateTime}</td>
+        </tr>
+    </c:forEach>
+</table>
+
+<br/>
+<a href="${pageContext.request.contextPath}/bill">➕ Create New Bill</a>
 </body>
 </html>
