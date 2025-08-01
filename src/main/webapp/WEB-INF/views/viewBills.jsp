@@ -31,5 +31,7 @@
 
 <br/>
 <a href="${pageContext.request.contextPath}/bill">➕ Create New Bill</a>
+<a href="${pageContext.request.contextPath}/bills/pdf?billId=${bill.id}">Download PDF</a>
+
 </body>
 </html>
