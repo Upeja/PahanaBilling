@@ -7,16 +7,18 @@ public class Bill {
     private String customerId;
     private String itemId;
     private int units;
+    private double unitPrice;
     private double totalAmount;
     private LocalDateTime dateTime;
 
     public Bill() {}
 
-    public Bill(int billId, String customerId, String itemId, int units, double totalAmount, LocalDateTime dateTime) {
+    public Bill(int billId, String customerId, String itemId, int units, double unitPrice, double totalAmount, LocalDateTime dateTime) {
         this.billId = billId;
         this.customerId = customerId;
         this.itemId = itemId;
         this.units = units;
+        this.unitPrice = unitPrice;
         this.totalAmount = totalAmount;
         this.dateTime = dateTime;
     }
@@ -34,6 +36,9 @@ public class Bill {
     public int getUnits() { return units; }
     public void setUnits(int units) { this.units = units; }
 
+    public double getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
+
     public double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
 
@@ -47,6 +52,7 @@ public class Bill {
                 ", customerId='" + customerId + '\'' +
                 ", itemId='" + itemId + '\'' +
                 ", units=" + units +
+                ", unitPrice=" + unitPrice +
                 ", totalAmount=" + totalAmount +
                 ", dateTime=" + dateTime +
                 '}';
