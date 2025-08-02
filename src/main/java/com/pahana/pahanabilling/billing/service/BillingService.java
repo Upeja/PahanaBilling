@@ -10,15 +10,15 @@ import java.util.List;
 public class BillingService {
     private final BillDAO billDAO = new BillDAO();
 
-    // 💰 Calculate total
-    public double calculateTotal(int units, double pricePerUnit) {
-        return units * pricePerUnit;
+    // 🧮 Calculate total
+    private double calculateTotal(int units, double unitPrice) {
+        return units * unitPrice;
     }
 
-    // 🧾 Create bill object
+    // 📦 Create bill object
     public Bill generateBill(String customerId, String itemId, int units, double unitPrice) {
         double total = calculateTotal(units, unitPrice);
-        return new Bill(0, customerId, itemId, units, total, LocalDateTime.now());
+        return new Bill(0, customerId, itemId, units, unitPrice, total, LocalDateTime.now());
     }
 
     // 💾 Save bill to DB
@@ -26,8 +26,8 @@ public class BillingService {
         billDAO.save(bill);
     }
 
-    // 📋 View previous bills
+    // 📋 View all bills
     public List<Bill> listAllBills() throws SQLException {
-        return billDAO.getAll();
+        return billDAO.getAllBills();
     }
 }

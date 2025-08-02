@@ -23,7 +23,6 @@ public class Bill {
         this.dateTime = dateTime;
     }
 
-    // Getters and Setters
     public int getBillId() { return billId; }
     public void setBillId(int billId) { this.billId = billId; }
 
