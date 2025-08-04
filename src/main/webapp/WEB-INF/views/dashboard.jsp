@@ -47,7 +47,7 @@
     <li>👤 <a href="${pageContext.request.contextPath}/customer.jsp">Register Customers</a></li>
     <li>🧾 <a href="${pageContext.request.contextPath}/bill">Generate Bill</a></li>
     <li>📋 <a href="${pageContext.request.contextPath}/viewBills.jsp">View All Bills</a></li>
-    <li>🚪 <a href="#">Logout</a></li>
+    <li>🚪 <a href="${pageContext.request.contextPath}/logout">Logout</a></li>
     <li>❓ <a href="#">Help</a></li>
   </ul>
 </div>
