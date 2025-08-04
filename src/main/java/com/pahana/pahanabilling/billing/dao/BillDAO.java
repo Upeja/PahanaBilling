@@ -10,11 +10,13 @@ import java.util.List;
 public class BillDAO {
     private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
     private static final String USER = "root";
-    private static final String PASSWORD = "your_password"; // change this
+    private static final String PASSWORD = "your_password"; // 🔁 Replace with actual password
 
-    // 📝 Save bill
+    // 📝 Save new bill
     public void save(Bill bill) throws SQLException {
-        String sql = "INSERT INTO bill (customer_id, item_id, units, unit_price, total_amount, date_time) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO bill (customer_id, item_id, units, unit_price, total_amount, date_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -32,6 +34,7 @@ public class BillDAO {
     // 📄 Get one bill by ID (for PDF export)
     public Bill findById(int billId) throws SQLException {
         String sql = "SELECT * FROM bill WHERE bill_id = ?";
+
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -50,6 +53,7 @@ public class BillDAO {
                 );
             }
         }
+
         return null;
     }
 
@@ -57,6 +61,7 @@ public class BillDAO {
     public List<Bill> getAllBills() throws SQLException {
         List<Bill> bills = new ArrayList<>();
         String sql = "SELECT * FROM bill ORDER BY date_time DESC";
+
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -74,6 +79,7 @@ public class BillDAO {
                 bills.add(bill);
             }
         }
+
         return bills;
     }
 }

@@ -16,6 +16,7 @@
         <th>Units</th>
         <th>Total Amount (LKR)</th>
         <th>Date</th>
+        <th>Actions</th>
     </tr>
     <c:forEach var="bill" items="${bills}">
         <tr>
@@ -25,13 +26,14 @@
             <td>${bill.units}</td>
             <td>${bill.totalAmount}</td>
             <td>${bill.dateTime}</td>
+            <td>
+                <a href="${pageContext.request.contextPath}/bills/pdf?billId=${bill.billId}" target="_blank">🧾 Download PDF</a>
+            </td>
         </tr>
     </c:forEach>
 </table>
 
 <br/>
 <a href="${pageContext.request.contextPath}/bill">➕ Create New Bill</a>
-<a href="${pageContext.request.contextPath}/bills/pdf?billId=${bill.id}">Download PDF</a>
-
 </body>
 </html>
