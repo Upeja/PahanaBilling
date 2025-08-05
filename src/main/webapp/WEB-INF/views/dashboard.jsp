@@ -1,4 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" session="true" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
   <title>📊 Pahana Billing Dashboard</title>
@@ -36,18 +37,29 @@
     a:hover {
       color: #003366;
     }
+    .session-info {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
+
+  <div class="session-info">
+    Logged in as: <strong>${sessionScope.username}</strong> |
+    <a href="${pageContext.request.contextPath}/logout">Logout</a>
+  </div>
+
   <h2>📊 Pahana Billing Dashboard</h2>
+
   <ul>
     <li>📦 <a href="${pageContext.request.contextPath}/items">Manage Items</a></li>
     <li>👤 <a href="${pageContext.request.contextPath}/customer.jsp">Register Customers</a></li>
     <li>🧾 <a href="${pageContext.request.contextPath}/bill">Generate Bill</a></li>
     <li>📋 <a href="${pageContext.request.contextPath}/viewBills.jsp">View All Bills</a></li>
-    <li>🚪 <a href="${pageContext.request.contextPath}/logout">Logout</a></li>
     <li>❓ <a href="#">Help</a></li>
   </ul>
 </div>
