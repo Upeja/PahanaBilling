@@ -61,7 +61,7 @@ public class ItemServlet extends HttpServlet {
                 String itemId = req.getParameter("itemId");
                 Item item = itemService.getItemById(itemId);
                 req.setAttribute("item", item);
-                req.getRequestDispatcher("/WEB-INF/views/editItem.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/editItem.jsp").forward(req, resp);
 
             } else if ("/items/delete".equals(path)) {
                 String itemId = req.getParameter("itemId");
@@ -78,7 +78,7 @@ public class ItemServlet extends HttpServlet {
                     items = itemService.listItems();
                 }
                 req.setAttribute("items", items);
-                req.getRequestDispatcher("/WEB-INF/views/items.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/items.jsp").forward(req, resp);
             }
 
         } catch (Exception e) {

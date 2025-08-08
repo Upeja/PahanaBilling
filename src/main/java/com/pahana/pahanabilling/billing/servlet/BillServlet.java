@@ -30,7 +30,7 @@ public class BillServlet extends HttpServlet {
             if ("/bills".equals(path)) {
                 List<Bill> bills = billingService.listAllBills();
                 req.setAttribute("bills", bills);
-                req.getRequestDispatcher("/WEB-INF/views/viewBills.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/viewBills.jsp").forward(req, resp);
             } else {
                 // Load dropdowns for form
                 List<Customer> customers = customerService.listCustomers();
@@ -38,7 +38,7 @@ public class BillServlet extends HttpServlet {
 
                 req.setAttribute("customers", customers);
                 req.setAttribute("items", items);
-                req.getRequestDispatcher("/WEB-INF/views/bill.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/bill.jsp").forward(req, resp);
             }
         } catch (Exception e) {
             e.printStackTrace();
