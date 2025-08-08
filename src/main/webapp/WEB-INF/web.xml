@@ -7,7 +7,7 @@
 
     <!-- ✅ Set dashboard.jsp as home -->
     <welcome-file-list>
-        <welcome-file>dashboard.jsp</welcome-file>
+        <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 
 </web-app>

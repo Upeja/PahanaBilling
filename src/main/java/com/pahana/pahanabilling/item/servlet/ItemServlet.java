@@ -92,7 +92,7 @@ public class ItemServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             req.setAttribute("items", itemService.listItems());
-            req.getRequestDispatcher("/WEB-INF/views/items.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/items.jsp").forward(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
             resp.getWriter().write("Error loading item list: " + e.getMessage());

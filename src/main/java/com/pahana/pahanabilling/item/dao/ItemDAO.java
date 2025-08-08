@@ -7,7 +7,7 @@ import com.pahana.pahanabilling.item.entity.Item;
 public class ItemDAO {
     private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
     private static final String USER = "root";
-    private static final String PASSWORD = "your_password"; // change this
+    private static final String PASSWORD = "upeja"; // change this
 
     // 🔽 Save New Item
     public void save(Item item) throws SQLException {

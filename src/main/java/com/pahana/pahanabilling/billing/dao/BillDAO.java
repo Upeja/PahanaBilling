@@ -10,7 +10,7 @@ import java.util.List;
 public class BillDAO {
     private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
     private static final String USER = "root";
-    private static final String PASSWORD = "your_password"; // 🔁 Replace with actual password
+    private static final String PASSWORD = "upeja";
 
     // 📝 Save new bill
     public void save(Bill bill) throws SQLException {
