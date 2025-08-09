@@ -2,62 +2,65 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
-    <title>👤 Customer Management</title>
+    <title>Manage Customers</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #f4f4f4; }
+        form { margin-top: 20px; }
+        input, button { padding: 6px; margin: 4px; }
+        .error { color: red; }
+    </style>
 </head>
 <body>
-<h2>👥 Customer List</h2>
+<h2>Manage Customers</h2>
 
-<!-- 🔺 Show error if exists -->
+<!-- Error message -->
 <c:if test="${not empty error}">
-    <p style="color: red;">${error}</p>
+    <div class="error">${error}</div>
 </c:if>
 
-<!-- ➕ Add Customer Form -->
-<form method="post" action="${pageContext.request.contextPath}/customers">
-    <label>Account No:</label>
-    <input type="text" name="accountNumber" required />
-
-    <label>Name:</label>
-    <input type="text" name="name" required />
-
-    <label>Address:</label>
-    <input type="text" name="address" required />
-
-    <label>Phone:</label>
-    <input type="text" name="phone" required />
-
-    <label>Units Consumed:</label>
-    <input type="number" name="unitsConsumed" min="0" required />
-
+<!-- Add customer form -->
+<form action="${pageContext.request.contextPath}/customers" method="post">
+    <input type="text" name="accountNumber" placeholder="Account Number" required>
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="text" name="address" placeholder="Address" required>
+    <input type="text" name="phone" placeholder="Phone" required>
+    <input type="number" name="unitsConsumed" placeholder="Units Consumed" required>
     <button type="submit">Add Customer</button>
 </form>
 
-<br/>
-
-<!-- 📋 Customer Table -->
-<table border="1" cellpadding="5">
+<!-- Customers table -->
+<table>
+    <thead>
     <tr>
-        <th>Account No</th>
+        <th>Account Number</th>
         <th>Name</th>
         <th>Address</th>
         <th>Phone</th>
-        <th>Units</th>
+        <th>Units Consumed</th>
         <th>Actions</th>
     </tr>
-    <c:forEach var="c" items="${customers}">
+    </thead>
+    <tbody>
+    <c:forEach var="customer" items="${customers}">
         <tr>
-            <td>${c.accountNumber}</td>
-            <td>${c.name}</td>
-            <td>${c.address}</td>
-            <td>${c.phone}</td>
-            <td>${c.unitsConsumed}</td>
+            <td>${customer.accountNumber}</td>
+            <td>${customer.name}</td>
+            <td>${customer.address}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.unitsConsumed}</td>
             <td>
-                <a href="${pageContext.request.contextPath}/customers/edit?accountNumber=${c.accountNumber}">Edit</a> |
-                <a href="${pageContext.request.contextPath}/customers/delete?accountNumber=${c.accountNumber}"
-                   onclick="return confirm('Delete this customer?')">Delete</a>
+                <a href="${pageContext.request.contextPath}/customers/edit?accountNumber=${customer.accountNumber}">Edit</a>
+                |
+                <a href="${pageContext.request.contextPath}/customers/delete?accountNumber=${customer.accountNumber}"
+                   onclick="return confirm('Are you sure?')">Delete</a>
             </td>
         </tr>
     </c:forEach>
+    </tbody>
 </table>
+
 </body>
 </html>
