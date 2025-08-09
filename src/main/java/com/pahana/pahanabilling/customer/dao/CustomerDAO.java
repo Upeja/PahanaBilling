@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDAO {
-    private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
+    private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String USER = "root";
     private static final String PASSWORD = "upeja"; // 🔁 Replace with your real password
 

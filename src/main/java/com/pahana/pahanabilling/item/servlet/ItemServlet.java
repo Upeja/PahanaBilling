@@ -33,7 +33,7 @@ public class ItemServlet extends HttpServlet {
 
             if ("/items/edit".equals(path)) {
                 itemService.updateItem(item);
-            } else {
+            } else { // Add new
                 if (itemService.itemExists(itemId)) {
                     req.setAttribute("error", "⚠️ Item ID already exists.");
                     forwardToList(req, resp);
@@ -42,6 +42,7 @@ public class ItemServlet extends HttpServlet {
                 itemService.addItem(item);
             }
 
+            // ✅ Redirect to GET /items so updated list is shown
             resp.sendRedirect(req.getContextPath() + "/items");
 
         } catch (Exception e) {
@@ -61,24 +62,15 @@ public class ItemServlet extends HttpServlet {
                 String itemId = req.getParameter("itemId");
                 Item item = itemService.getItemById(itemId);
                 req.setAttribute("item", item);
-                req.getRequestDispatcher("/WEB-INF/editItem.jsp").forward(req, resp);
+                req.getRequestDispatcher("/editItem.jsp").forward(req, resp);
 
             } else if ("/items/delete".equals(path)) {
                 String itemId = req.getParameter("itemId");
                 itemService.deleteItem(itemId);
                 resp.sendRedirect(req.getContextPath() + "/items");
 
-            } else { // "/items"
-                String search = req.getParameter("search");
-                List<Item> items;
-                if (search != null && !search.trim().isEmpty()) {
-                    items = itemService.searchItems(search.trim());
-                    req.setAttribute("search", search);
-                } else {
-                    items = itemService.listItems();
-                }
-                req.setAttribute("items", items);
-                req.getRequestDispatcher("/WEB-INF/items.jsp").forward(req, resp);
+            } else { // /items
+                forwardToList(req, resp);
             }
 
         } catch (Exception e) {
@@ -91,8 +83,9 @@ public class ItemServlet extends HttpServlet {
     private void forwardToList(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
-            req.setAttribute("items", itemService.listItems());
-            req.getRequestDispatcher("/WEB-INF/items.jsp").forward(req, resp);
+            List<Item> items = itemService.listItems();
+            req.setAttribute("items", items);
+            req.getRequestDispatcher("/items.jsp").forward(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
             resp.getWriter().write("Error loading item list: " + e.getMessage());

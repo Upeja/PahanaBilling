@@ -5,9 +5,20 @@ import java.util.*;
 import com.pahana.pahanabilling.item.entity.Item;
 
 public class ItemDAO {
-    private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing";
+
+    private static final String URL = "jdbc:mysql://localhost:3306/pahana_billing?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "upeja"; // change this
+    private static final String PASSWORD = "upeja"; // change this if needed
+
+    // ✅ Static block to ensure MySQL driver is loaded
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("✅ MySQL JDBC Driver loaded successfully.");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("❌ MySQL JDBC Driver not found. Please add mysql-connector-j to your classpath.", e);
+        }
+    }
 
     // 🔽 Save New Item
     public void save(Item item) throws SQLException {
@@ -78,6 +89,8 @@ public class ItemDAO {
             stmt.executeUpdate();
         }
     }
+
+    // ✅ Check if item exists
     public boolean exists(String itemId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM items WHERE item_id = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -90,6 +103,8 @@ public class ItemDAO {
         }
         return false;
     }
+
+    // 🔍 Search items by name
     public List<Item> searchByName(String keyword) throws SQLException {
         List<Item> results = new ArrayList<>();
         String sql = "SELECT * FROM items WHERE name LIKE ?";
@@ -107,5 +122,4 @@ public class ItemDAO {
         }
         return results;
     }
-
 }

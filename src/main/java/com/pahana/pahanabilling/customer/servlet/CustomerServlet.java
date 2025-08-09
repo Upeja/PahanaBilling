@@ -65,7 +65,7 @@ public class CustomerServlet extends HttpServlet {
                 String id = req.getParameter("accountNumber");
                 Customer customer = service.getCustomerById(id);
                 req.setAttribute("customer", customer);
-                req.getRequestDispatcher("/WEB-INF/editCustomer.jsp").forward(req, resp);
+                req.getRequestDispatcher("/editCustomer.jsp").forward(req, resp);
 
             } else if ("/customers/delete".equals(path)) {
                 String id = req.getParameter("accountNumber");
@@ -75,7 +75,7 @@ public class CustomerServlet extends HttpServlet {
             } else {
                 List<Customer> customers = service.listCustomers();
                 req.setAttribute("customers", customers);
-                req.getRequestDispatcher("/WEB-INF/customers.jsp").forward(req, resp);
+                req.getRequestDispatcher("/customers.jsp").forward(req, resp);
             }
 
         } catch (Exception e) {
@@ -89,7 +89,7 @@ public class CustomerServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             req.setAttribute("customers", service.listCustomers());
-            req.getRequestDispatcher("/WEB-INF/customers.jsp").forward(req, resp);
+            req.getRequestDispatcher("/customers.jsp").forward(req, resp);
         } catch (SQLException e) {
             resp.getWriter().write("Error loading customers: " + e.getMessage());
         }
