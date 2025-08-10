@@ -56,9 +56,9 @@
   <h2>📊 Pahana Billing Dashboard</h2>
 
   <ul>
-    <li>📦 <a href="${pageContext.request.contextPath}/items.jsp">Manage Items</a></li>
-    <li>👤 <a href="${pageContext.request.contextPath}/customer.jsp">Register Customers</a></li>
-    <li>🧾 <a href="${pageContext.request.contextPath}/bill.jsp">Generate Bill</a></li>
+    <li>📦 <a href="${pageContext.request.contextPath}/items">Manage Items</a></li>
+    <li>👤 <a href="${pageContext.request.contextPath}/customers">Register Customers</a></li>
+    <li>🧾 <a href="${pageContext.request.contextPath}/bill">Generate Bill</a></li>
     <li>📋 <a href="${pageContext.request.contextPath}/viewBills.jsp">View All Bills</a></li>
     <li>❓ <a href="#">Help</a></li>
   </ul>

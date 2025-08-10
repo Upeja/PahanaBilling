@@ -3,92 +3,63 @@ package com.pahana.pahanabilling.item.servlet;
 import com.pahana.pahanabilling.item.entity.Item;
 import com.pahana.pahanabilling.item.service.ItemService;
 
-import jakarta.servlet.*;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
-
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(urlPatterns = {"/items", "/items/edit", "/items/delete"})
+@WebServlet(urlPatterns = "/items")
 public class ItemServlet extends HttpServlet {
     private final ItemService itemService = new ItemService();
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        String path = req.getServletPath();
-
-        String itemId = req.getParameter("itemId");
-        String name = req.getParameter("name");
-        double price = Double.parseDouble(req.getParameter("price"));
-        Item item = new Item(itemId, name, price);
-
-        try {
-            if (!item.isValid()) {
-                req.setAttribute("error", "❌ Invalid item data.");
-                forwardToList(req, resp);
-                return;
-            }
-
-            if ("/items/edit".equals(path)) {
-                itemService.updateItem(item);
-            } else { // Add new
-                if (itemService.itemExists(itemId)) {
-                    req.setAttribute("error", "⚠️ Item ID already exists.");
-                    forwardToList(req, resp);
-                    return;
-                }
-                itemService.addItem(item);
-            }
-
-            // ✅ Redirect to GET /items so updated list is shown
-            resp.sendRedirect(req.getContextPath() + "/items");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            req.setAttribute("error", "Error processing item: " + e.getMessage());
-            forwardToList(req, resp);
-        }
+        loadItemList(req);
+        req.getRequestDispatcher("/items.jsp").forward(req, resp);
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        String path = req.getServletPath();
+        String action = req.getParameter("action");
+        String itemId = req.getParameter("itemId");
+        String name = req.getParameter("name");
+        double price = Double.parseDouble(req.getParameter("price"));
 
         try {
-            if ("/items/edit".equals(path)) {
-                String itemId = req.getParameter("itemId");
-                Item item = itemService.getItemById(itemId);
-                req.setAttribute("item", item);
-                req.getRequestDispatcher("/editItem.jsp").forward(req, resp);
-
-            } else if ("/items/delete".equals(path)) {
-                String itemId = req.getParameter("itemId");
+            if ("edit".equalsIgnoreCase(action)) {
+                itemService.updateItem(new Item(itemId, name, price));
+                req.setAttribute("success", "✅ Item updated successfully!");
+            } else if ("delete".equalsIgnoreCase(action)) {
                 itemService.deleteItem(itemId);
-                resp.sendRedirect(req.getContextPath() + "/items");
-
-            } else { // /items
-                forwardToList(req, resp);
+                req.setAttribute("success", "🗑️ Item deleted successfully!");
+            } else {
+                // Add new
+                if (itemService.itemExists(itemId)) {
+                    req.setAttribute("error", "⚠️ Item ID already exists!");
+                } else {
+                    itemService.addItem(new Item(itemId, name, price));
+                    req.setAttribute("success", "✅ Item added successfully!");
+                }
             }
-
         } catch (Exception e) {
+            req.setAttribute("error", "❌ Error: " + e.getMessage());
             e.printStackTrace();
-            req.setAttribute("error", "Error: " + e.getMessage());
-            forwardToList(req, resp);
         }
+
+        loadItemList(req);
+        req.getRequestDispatcher("/items.jsp").forward(req, resp);
     }
 
-    private void forwardToList(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    private void loadItemList(HttpServletRequest req) {
         try {
             List<Item> items = itemService.listItems();
             req.setAttribute("items", items);
-            req.getRequestDispatcher("/items.jsp").forward(req, resp);
         } catch (Exception e) {
+            req.setAttribute("error", "Error loading items: " + e.getMessage());
             e.printStackTrace();
-            resp.getWriter().write("Error loading item list: " + e.getMessage());
         }
     }
 }
