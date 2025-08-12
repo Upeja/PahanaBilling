@@ -13,10 +13,12 @@ import jakarta.servlet.http.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
+import java.io.FileOutputStream;
+
+
 
 @WebServlet(urlPatterns = "/bill")
 public class BillServlet extends HttpServlet {
@@ -41,57 +43,65 @@ public class BillServlet extends HttpServlet {
         String unitsStr = req.getParameter("units");
         String unitPriceStr = req.getParameter("unitPrice");
 
-        // Basic validation for required parameters
-        if (customerId == null || customerId.isEmpty() ||
-                itemId == null || itemId.isEmpty() ||
-                unitsStr == null || unitsStr.isEmpty() ||
-                unitPriceStr == null || unitPriceStr.isEmpty()) {
-
-            req.setAttribute("error", "❌ Missing required fields: customerId, itemId, units, or unitPrice.");
-            loadData(req);
-            req.getRequestDispatcher("/bill.jsp").forward(req, resp);
-            return;
-        }
-
-        int units;
-        double unitPrice;
-        try {
-            units = Integer.parseInt(unitsStr);
-            unitPrice = Double.parseDouble(unitPriceStr);
-        } catch (NumberFormatException e) {
-            req.setAttribute("error", "❌ Invalid number format for units or unit price.");
-            loadData(req);
-            req.getRequestDispatcher("/bill.jsp").forward(req, resp);
+        if (customerId == null || itemId == null || unitsStr == null || unitPriceStr == null
+                || customerId.isEmpty() || itemId.isEmpty() || unitsStr.isEmpty() || unitPriceStr.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("Missing required fields");
             return;
         }
 
         try {
-            // Generate and save bill
+            int units = Integer.parseInt(unitsStr);
+            double unitPrice = Double.parseDouble(unitPriceStr);
+
+            // Generate bill object
             Bill bill = billingService.generateBill(customerId, itemId, units, unitPrice);
+
+            // Save bill in DB (this should set bill.billId if you applied change above)
             billingService.saveBill(bill);
 
-            // Create PDF file path
-            String pdfFolderPath = getServletContext().getRealPath("/generated-pdfs");
-            File pdfFolder = new File(pdfFolderPath);
-            if (!pdfFolder.exists()) pdfFolder.mkdirs();
+            // Create a folder under webapp so it's reachable: /generatedpdfs
+            String pdfFolderPath = getServletContext().getRealPath("/generatedpdfs");
+            File folder = new File(pdfFolderPath);
+            if (!folder.exists()) folder.mkdirs();
 
-            String pdfFileName = "bill_" + LocalDateTime.now().toString().replace(":", "-") + ".pdf";
-            String pdfFilePath = pdfFolderPath + File.separator + pdfFileName;
+            // file name
+            String fileName = "Bill_" + bill.getBillId() + ".pdf";
+            File pdfFile = new File(folder, fileName);
 
-            // Generate PDF for this single bill
-            billingService.generatePDF(Collections.singletonList(bill), pdfFilePath);
+            // Use PdfExportUtil to generate the pdf (it expects an OutputStream)
+            try (FileOutputStream fos = new FileOutputStream(pdfFile)) {
+                com.pahana.pahanabilling.util.PdfExportUtil.generateBillPDF(bill, fos);
+            }
 
-            req.setAttribute("success", "✅ Bill generated successfully!");
-            req.setAttribute("pdfPath", "generated-pdfs/" + pdfFileName);
+            // respond with updated table rows (AJAX expects HTML rows)
+            resp.setContentType("text/html; charset=UTF-8");
+            PrintWriter out = resp.getWriter();
+            List<Bill> bills = billingService.listAllBills();
+            for (Bill b : bills) {
+                out.println("<tr>");
+                out.println("<td>" + b.getBillId() + "</td>");
+                out.println("<td>" + b.getCustomerId() + "</td>");
+                out.println("<td>" + b.getItemId() + "</td>");
+                out.println("<td>" + b.getUnits() + "</td>");
+                out.println("<td>" + b.getUnitPrice() + "</td>");
+                out.println("<td>" + b.getTotalAmount() + "</td>");
+                // link to PDF (saved under /generatedpdfs)
+                out.println("<td><a target='_blank' href='" + req.getContextPath()
+                        + "/generatedpdfs/Bill_" + b.getBillId() + ".pdf'>View PDF</a></td>");
+                out.println("</tr>");
+            }
 
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("Invalid number format");
         } catch (SQLException e) {
-            e.printStackTrace();
-            req.setAttribute("error", "❌ Error saving bill: " + e.getMessage());
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("Error saving bill: " + e.getMessage());
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("PDF generation error: " + e.getMessage());
         }
-
-        // Reload all data
-        loadData(req);
-        req.getRequestDispatcher("/bill.jsp").forward(req, resp);
     }
 
 
@@ -106,7 +116,6 @@ public class BillServlet extends HttpServlet {
             req.setAttribute("bills", bills);
         } catch (Exception e) {
             req.setAttribute("error", "Error loading data: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }
