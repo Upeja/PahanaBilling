@@ -1,60 +1,89 @@
 package com.pahana.pahanabilling.util;
 
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.*;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import com.pahana.pahanabilling.billing.entity.Bill;
 
-import java.io.OutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.time.format.DateTimeFormatter;
 
 public class PdfExportUtil {
-    public static void generateBillPDF(Bill bill, OutputStream out) throws Exception {
-        Document document = new Document();
-        PdfWriter.getInstance(document, out);
+
+    /**
+     * Generates a PDF for a Bill, saves it to a specified directory,
+     * and returns the full path to the saved file.
+     * @param bill The bill data to include in the PDF.
+     * @param outputDir The directory on the server where the PDF will be saved.
+     * @return The absolute path to the newly created PDF file.
+     * @throws Exception if there is an error during PDF generation or file I/O.
+     */
+    public static String generateBillPDF(Bill bill, String outputDir) throws Exception {
+        System.out.println(bill + outputDir);
+        // Create the output directory if it doesn't already exist
+        File folder = new File(outputDir);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+
+        // Define the file path for the new PDF
+        String fileName = "bill_" + bill.getBillId() + ".pdf";
+        String filePath = outputDir + File.separator + fileName;
+        System.out.println(fileName + filePath);
+        // Create a new A4-sized document
+        Document document = new Document(PageSize.A4);
+
+        // Get a PdfWriter instance that writes to a file
+        PdfWriter.getInstance(document, new FileOutputStream(filePath));
+
+        // Open the document to begin adding content
         document.open();
+
+        // --- Add Content to the Document ---
 
         // Title
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-        Paragraph title = new Paragraph("🧾 Pahana Billing Receipt", titleFont);
+        Paragraph title = new Paragraph("Bill Receipt", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
-        document.add(Chunk.NEWLINE);
 
-        // Table layout
-        PdfPTable table = new PdfPTable(2);
+        document.add(new Paragraph(" ")); // Add a blank line for spacing
+
+        // Bill Details
+        document.add(new Paragraph("Bill ID: " + bill.getBillId()));
+        document.add(new Paragraph("Customer ID: " + bill.getCustomerId()));
+
+        // Format the date and time for better readability
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        document.add(new Paragraph("Date: " + bill.getDateTime().format(formatter)));
+        document.add(new Paragraph(" "));
+
+        // Table for bill items
+        PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
-        table.setSpacingBefore(10f);
-        table.setSpacingAfter(10f);
 
-        Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-        Font valueFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+        // Table Headers
+        table.addCell("Item ID");
+        table.addCell("Units");
+        table.addCell("Unit Price (LKR)");
+        table.addCell("Total (LKR)");
 
-        // Add rows
-        table.addCell(new Phrase("Customer ID", labelFont));
-        table.addCell(new Phrase(bill.getCustomerId(), valueFont));
-
-        table.addCell(new Phrase("Item ID", labelFont));
-        table.addCell(new Phrase(bill.getItemId(), valueFont));
-
-        table.addCell(new Phrase("Units", labelFont));
-        table.addCell(new Phrase(String.valueOf(bill.getUnits()), valueFont));
-
-        table.addCell(new Phrase("Unit Price (LKR)", labelFont));
-        table.addCell(new Phrase("Rs. " + bill.getUnitPrice(), valueFont));
-
-        table.addCell(new Phrase("Total Amount (LKR)", labelFont));
-        table.addCell(new Phrase("Rs. " + bill.getTotalAmount(), valueFont));
-
-        table.addCell(new Phrase("Date & Time", labelFont));
-        table.addCell(new Phrase(bill.getDateTime().toString(), valueFont));
+        // Table Data
+        table.addCell(bill.getItemId());
+        table.addCell(String.valueOf(bill.getUnits()));
+        table.addCell(String.format("%.2f", bill.getUnitPrice()));
+        table.addCell(String.format("%.2f", bill.getTotalAmount()));
 
         document.add(table);
 
-        // Footer
-        Paragraph thankYou = new Paragraph("Thank you for using Pahana Billing System.", valueFont);
-        thankYou.setAlignment(Element.ALIGN_CENTER);
-        document.add(Chunk.NEWLINE);
-        document.add(thankYou);
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Thank you for your purchase!"));
 
+        // Close the document to save the file.
         document.close();
+        System.out.println(filePath);
+        // Return the full path to the created file
+        return filePath;
     }
 }
