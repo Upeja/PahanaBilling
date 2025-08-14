@@ -139,7 +139,7 @@
       </a>
     </div>
     <div class="menu-card">
-      <a href="#">
+      <a href="help.jsp">
         <i class="fas fa-question-circle"></i>
         <span>Help</span>
       </a>
