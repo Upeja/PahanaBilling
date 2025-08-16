@@ -1,89 +1,166 @@
 package com.pahana.pahanabilling.util;
 
 import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.pahana.pahanabilling.billing.entity.Bill;
+import com.pahana.pahanabilling.billing.entity.BillItem;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class PdfExportUtil {
 
     /**
-     * Generates a PDF for a Bill, saves it to a specified directory,
-     * and returns the full path to the saved file.
-     * @param bill The bill data to include in the PDF.
-     * @param outputDir The directory on the server where the PDF will be saved.
-     * @return The absolute path to the newly created PDF file.
-     * @throws Exception if there is an error during PDF generation or file I/O.
+     * Generates a PDF for a Bill with multiple items, saves it to outputDir,
+     * and returns the created File.
      */
-    public static String generateBillPDF(Bill bill, String outputDir) throws Exception {
-        System.out.println(bill + outputDir);
-        // Create the output directory if it doesn't already exist
+    public static File generateBillPDF(Bill bill, String outputDir) throws Exception {
+        if (bill == null) {
+            throw new IllegalArgumentException("Bill cannot be null");
+        }
+
+        // Ensure output directory exists
         File folder = new File(outputDir);
         if (!folder.exists()) {
             folder.mkdirs();
         }
 
-        // Define the file path for the new PDF
         String fileName = "bill_" + bill.getBillId() + ".pdf";
-        String filePath = outputDir + File.separator + fileName;
-        System.out.println(fileName + filePath);
-        // Create a new A4-sized document
-        Document document = new Document(PageSize.A4);
+        File file = new File(folder, fileName);
 
-        // Get a PdfWriter instance that writes to a file
-        PdfWriter.getInstance(document, new FileOutputStream(filePath));
+        Document document = new Document(PageSize.A4, 36, 36, 36, 36);
 
-        // Open the document to begin adding content
-        document.open();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            PdfWriter.getInstance(document, fos);
+            document.open();
 
-        // --- Add Content to the Document ---
+            // Title
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Paragraph title = new Paragraph("Bill Receipt", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(Chunk.NEWLINE);
 
-        // Title
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-        Paragraph title = new Paragraph("Bill Receipt", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        document.add(title);
+            // Bill details
+            Font label = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+            Font value = FontFactory.getFont(FontFactory.HELVETICA, 11);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        document.add(new Paragraph(" ")); // Add a blank line for spacing
+            Paragraph header = new Paragraph();
+            header.add(new Chunk("Bill ID: ", label));
+            header.add(new Chunk(String.valueOf(bill.getBillId()), value));
+            header.add(Chunk.NEWLINE);
+            header.add(new Chunk("Customer ID: ", label));
+            header.add(new Chunk(bill.getCustomerId() != null ? bill.getCustomerId() : "-", value));
+            header.add(Chunk.NEWLINE);
+            header.add(new Chunk("Date: ", label));
+            header.add(new Chunk(bill.getDateTime() != null ? bill.getDateTime().format(formatter) : "-", value));
+            document.add(header);
 
-        // Bill Details
-        document.add(new Paragraph("Bill ID: " + bill.getBillId()));
-        document.add(new Paragraph("Customer ID: " + bill.getCustomerId()));
+            document.add(Chunk.NEWLINE);
 
-        // Format the date and time for better readability
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        document.add(new Paragraph("Date: " + bill.getDateTime().format(formatter)));
-        document.add(new Paragraph(" "));
+            // Items table (Item ID | Qty | Unit Price | Subtotal)
+            List<BillItem> items = bill.getItems();
 
-        // Table for bill items
-        PdfPTable table = new PdfPTable(4);
-        table.setWidthPercentage(100);
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(5f);
+            table.setWidths(new float[]{2.5f, 1.2f, 1.6f, 1.7f});
 
-        // Table Headers
-        table.addCell("Item ID");
-        table.addCell("Units");
-        table.addCell("Unit Price (LKR)");
-        table.addCell("Total (LKR)");
+            // Header cells
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.WHITE);
+            Color headerBg = new Color(40, 55, 77);
 
-        // Table Data
-        table.addCell(bill.getItemId());
-        table.addCell(String.valueOf(bill.getUnits()));
-        table.addCell(String.format("%.2f", bill.getUnitPrice()));
-        table.addCell(String.format("%.2f", bill.getTotalAmount()));
+            PdfPCell h1 = new PdfPCell(new Phrase("Item ID", headerFont));
+            PdfPCell h2 = new PdfPCell(new Phrase("Qty", headerFont));
+            PdfPCell h3 = new PdfPCell(new Phrase("Unit Price (LKR)", headerFont));
+            PdfPCell h4 = new PdfPCell(new Phrase("Subtotal (LKR)", headerFont));
 
-        document.add(table);
+            for (PdfPCell h : new PdfPCell[]{h1, h2, h3, h4}) {
+                h.setHorizontalAlignment(Element.ALIGN_CENTER);
+                h.setBackgroundColor(headerBg);
+                h.setPadding(6f);
+                table.addCell(h);
+            }
 
-        document.add(new Paragraph(" "));
-        document.add(new Paragraph("Thank you for your purchase!"));
+            Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            double runningTotal = 0.0;
 
-        // Close the document to save the file.
-        document.close();
-        System.out.println(filePath);
-        // Return the full path to the created file
-        return filePath;
+            if (items != null && !items.isEmpty()) {
+                for (BillItem it : items) {
+                    double subtotal = it.getSubtotal() != 0.0
+                            ? it.getSubtotal()
+                            : round(it.getQuantity() * it.getUnitPrice());
+                    runningTotal += subtotal;
+
+                    PdfPCell c1 = new PdfPCell(new Phrase(it.getItemId(), cellFont));
+                    PdfPCell c2 = new PdfPCell(new Phrase(String.valueOf(it.getQuantity()), cellFont));
+                    PdfPCell c3 = new PdfPCell(new Phrase(formatMoney(it.getUnitPrice()), cellFont));
+                    PdfPCell c4 = new PdfPCell(new Phrase(formatMoney(subtotal), cellFont));
+
+                    c1.setPadding(5f);
+                    c2.setPadding(5f);
+                    c3.setPadding(5f);
+                    c4.setPadding(5f);
+
+                    c2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    c3.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    c4.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+                    table.addCell(c1);
+                    table.addCell(c2);
+                    table.addCell(c3);
+                    table.addCell(c4);
+                }
+            } else {
+                PdfPCell empty = new PdfPCell(new Phrase("No items", cellFont));
+                empty.setColspan(4);
+                empty.setHorizontalAlignment(Element.ALIGN_CENTER);
+                empty.setPadding(8f);
+                table.addCell(empty);
+            }
+
+            // Grand total row
+            PdfPCell totalLabel = new PdfPCell(new Phrase("Grand Total (LKR)", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+            totalLabel.setColspan(3);
+            totalLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalLabel.setPadding(6f);
+
+            double totalFromBill = bill.getTotalAmount() != 0.0 ? bill.getTotalAmount() : runningTotal;
+
+            PdfPCell totalValue = new PdfPCell(new Phrase(formatMoney(totalFromBill), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
+            totalValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalValue.setPadding(6f);
+
+            table.addCell(totalLabel);
+            table.addCell(totalValue);
+
+            document.add(table);
+
+            document.add(Chunk.NEWLINE);
+            Paragraph thanks = new Paragraph("Thank you for your purchase!", FontFactory.getFont(FontFactory.HELVETICA, 11));
+            thanks.setAlignment(Element.ALIGN_CENTER);
+            document.add(thanks);
+
+        } finally {
+            document.close();
+        }
+
+        return file;
+    }
+
+    private static String formatMoney(double value) {
+        return String.format("%.2f", value);
+    }
+
+    private static double round(double v) {
+        return new BigDecimal(v).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

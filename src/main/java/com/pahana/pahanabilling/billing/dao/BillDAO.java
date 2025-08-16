@@ -1,6 +1,7 @@
 package com.pahana.pahanabilling.billing.dao;
 
 import com.pahana.pahanabilling.billing.entity.Bill;
+import com.pahana.pahanabilling.billing.entity.BillItem;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,84 +12,93 @@ public class BillDAO {
     private static final String USER = "root";
     private static final String PASSWORD = "upeja";
 
-    // Load MySQL Driver once when the class is loaded
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("✅ MySQL JDBC Driver loaded successfully (BillDAO)");
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ MySQL JDBC Driver not found (BillDAO)");
             e.printStackTrace();
         }
     }
 
-    // 📝 Save new bill
-    public void save(Bill bill) throws SQLException {
-        String sql = "INSERT INTO bills (customer_id, item_id, units, unit_price, total_amount, date_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, bill.getCustomerId());
-            stmt.setString(2, bill.getItemId());
-            stmt.setInt(3, bill.getUnits());
-            stmt.setDouble(4, bill.getUnitPrice());
-            stmt.setDouble(5, bill.getTotalAmount());
-            stmt.setTimestamp(6, Timestamp.valueOf(bill.getDateTime()));
-
-            stmt.executeUpdate();
-        }
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // 📄 Get one bill by ID
+    /**
+     * Saves the main bill record (without items) and returns the new bill's ID.
+     */
+    public int saveBill(Bill bill) throws SQLException {
+        String sql = "INSERT INTO bills (customer_id, total_amount, date_time) VALUES (?, ?, ?)";
+        int generatedId = 0;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, bill.getCustomerId());
+            stmt.setDouble(2, bill.getTotalAmount());
+            stmt.setTimestamp(3, Timestamp.valueOf(bill.getDateTime()));
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    generatedId = rs.getInt(1);
+                } else {
+                    throw new SQLException("Creating bill failed, no ID obtained.");
+                }
+            }
+        }
+        return generatedId;
+    }
+
+    /**
+     * Finds a single bill by its ID and also fetches all its associated items.
+     */
     public Bill findById(int billId) throws SQLException {
         String sql = "SELECT * FROM bills WHERE bill_id = ?";
+        Bill bill = null;
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, billId);
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    bill = new Bill();
+                    bill.setBillId(rs.getInt("bill_id"));
+                    bill.setCustomerId(rs.getString("customer_id"));
+                    bill.setTotalAmount(rs.getDouble("total_amount"));
+                    bill.setDateTime(rs.getTimestamp("date_time").toLocalDateTime());
 
-            if (rs.next()) {
-                return new Bill(
-                        rs.getInt("bill_id"),
-                        rs.getString("customer_id"),
-                        rs.getString("item_id"),
-                        rs.getInt("units"),
-                        rs.getDouble("unit_price"),
-                        rs.getDouble("total_amount"),
-                        rs.getTimestamp("date_time").toLocalDateTime()
-                );
+                    // Now, fetch the associated items for this bill
+                    bill.setItems(findItemsForBill(bill.getBillId(), conn));
+                }
             }
         }
-
-        return null;
+        return bill;
     }
 
-    // 📋 Get all bills
-    public List<Bill> getAllBills() throws SQLException {
-        List<Bill> bills = new ArrayList<>();
-        String sql = "SELECT * FROM bills ORDER BY date_time DESC";
+    /**
+     * Helper method to get all items for a specific bill ID.
+     */
+    private List<BillItem> findItemsForBill(int billId, Connection conn) throws SQLException {
+        List<BillItem> items = new ArrayList<>();
+        String sql = "SELECT * FROM bill_items WHERE bill_id = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                bills.add(new Bill(
-                        rs.getInt("bill_id"),
-                        rs.getString("customer_id"),
-                        rs.getString("item_id"),
-                        rs.getInt("units"),
-                        rs.getDouble("unit_price"),
-                        rs.getDouble("total_amount"),
-                        rs.getTimestamp("date_time").toLocalDateTime()
-                ));
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, billId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BillItem item = new BillItem();
+                    item.setBillItemId(rs.getInt("bill_item_id"));
+                    item.setBillId(rs.getInt("bill_id"));
+                    item.setItemId(rs.getString("item_id"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setUnitPrice(rs.getDouble("unit_price"));
+                    item.setSubtotal(rs.getDouble("subtotal"));
+                    items.add(item);
+                }
             }
         }
-
-        return bills;
+        return items;
     }
 }

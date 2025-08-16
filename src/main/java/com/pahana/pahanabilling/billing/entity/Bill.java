@@ -1,59 +1,65 @@
 package com.pahana.pahanabilling.billing.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Bill {
     private int billId;
     private String customerId;
-    private String itemId;
-    private int units;
-    private double unitPrice;
     private double totalAmount;
     private LocalDateTime dateTime;
 
+    // A bill now contains a list of its items.
+    private List<BillItem> items;
+
     public Bill() {}
 
-    public Bill(int billId, String customerId, String itemId, int units, double unitPrice, double totalAmount, LocalDateTime dateTime) {
-        this.billId = billId;
+    // Constructor for creating a new bill
+    public Bill(String customerId, double totalAmount, LocalDateTime dateTime, List<BillItem> items) {
         this.customerId = customerId;
-        this.itemId = itemId;
-        this.units = units;
-        this.unitPrice = unitPrice;
         this.totalAmount = totalAmount;
+        this.dateTime = dateTime;
+        this.items = items;
+    }
+
+    // Getters and Setters
+    public int getBillId() {
+        return billId;
+    }
+
+    public void setBillId(int billId) {
+        this.billId = billId;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
     }
 
-    public int getBillId() { return billId; }
-    public void setBillId(int billId) { this.billId = billId; }
+    public List<BillItem> getItems() {
+        return items;
+    }
 
-    public String getCustomerId() { return customerId; }
-    public void setCustomerId(String customerId) { this.customerId = customerId; }
-
-    public String getItemId() { return itemId; }
-    public void setItemId(String itemId) { this.itemId = itemId; }
-
-    public int getUnits() { return units; }
-    public void setUnits(int units) { this.units = units; }
-
-    public double getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
-
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
-
-    public LocalDateTime getDateTime() { return dateTime; }
-    public void setDateTime(LocalDateTime dateTime) { this.dateTime = dateTime; }
-
-    @Override
-    public String toString() {
-        return "Bill{" +
-                "billId=" + billId +
-                ", customerId='" + customerId + '\'' +
-                ", itemId='" + itemId + '\'' +
-                ", units=" + units +
-                ", unitPrice=" + unitPrice +
-                ", totalAmount=" + totalAmount +
-                ", dateTime=" + dateTime +
-                '}';
+    public void setItems(List<BillItem> items) {
+        this.items = items;
     }
 }
