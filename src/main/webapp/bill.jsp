@@ -1,128 +1,132 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
     <title>Generate Bill</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: sans-serif; }
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .form-section, .items-section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+        button { padding: 8px 12px; cursor: pointer; }
+        #grandTotal { font-weight: bold; font-size: 1.2em; }
+    </style>
 </head>
 <body>
-<h2>Generate Bill</h2>
+<div class="container">
+    <h2>Generate New Bill</h2>
 
-<form id="billForm">
-    <label>Customer:</label>
-    <select name="customerId" required>
-        <c:forEach var="c" items="${customers}">
-            <option value="${c.accountNumber}">${c.name}</option>
-        </c:forEach>
-    </select><br><br>
+    <form id="billForm" action="bill" method="post" target="_blank">
+        <div class="form-section">
+            <label for="customer">Select Customer:</label>
+            <select id="customer" name="customerId" required>
+                <c:forEach var="cust" items="${customers}">
+                    <option value="${cust.customerId}">${cust.name}</option>
+                </c:forEach>
+            </select>
+        </div>
 
-    <label>Item:</label>
-    <select name="itemId" id="itemSelect" required>
-        <c:forEach var="i" items="${items}">
-            <option value="${i.itemId}" data-price="${i.price}">${i.name}</option>
-        </c:forEach>
-    </select><br><br>
+        <div class="form-section">
+            <h4>Add Items</h4>
+            <label for="item">Item:</label>
+            <select id="item">
+                <c:forEach var="itm" items="${items}">
+                    <option value="${itm.itemId}" data-price="${itm.unitPrice}">${itm.name}</option>
+                </c:forEach>
+            </select>
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" value="1" min="1">
+            <button type="button" onclick="addItem()">Add Item</button>
+        </div>
 
-    <label>Unit Price:</label>
-    <input type="number" name="unitPrice" id="unitPrice" step="0.01" readonly><br><br>
+        <h3>Bill Items</h3>
+        <table id="billItemsTable">
+            <thead>
+            <tr>
+                <th>Item ID</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Subtotal</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
 
-    <label>Units:</label>
-    <input type="number" name="units" id="units" min="1" required><br><br>
+        <p>Grand Total: <span id="grandTotal">0.00</span></p>
 
-    <label>Total:</label>
-    <input type="text" id="totalAmount" readonly><br><br>
+        <div id="hidden-items"></div>
 
-    <button type="submit">Generate Bill</button>
-</form>
-
-<h3>All Bills</h3>
-<table border="1" id="billTable">
-    <thead>
-    <tr>
-        <th>Bill ID</th>
-        <th>Customer</th>
-        <th>Item</th>
-        <th>Units</th>
-        <th>Unit Price</th>
-        <th>Total</th>
-        <th>Date</th>
-        <th>PDF</th>
-    </tr>
-    </thead>
-    <tbody>
-    <c:forEach var="b" items="${bills}">
-        <tr>
-            <td>${b.billId}</td>
-            <td>${b.customerId}</td>
-            <td>${b.itemId}</td>
-            <td>${b.units}</td>
-            <td>${b.unitPrice}</td>
-            <td>${b.totalAmount}</td>
-            <td>${b.dateTime}</td>
-            <td>
-                <form action="bill/pdf" method="get" target="_blank">
-                    <input type="hidden" name="billId" value="${b.billId}">
-                    <button type="submit">Generate PDF</button>
-                </form>
-            </td>
-        </tr>
-    </c:forEach>
-    </tbody>
-</table>
-
+        <button type="submit">Generate Bill PDF</button>
+    </form>
+</div>
 
 <script>
-    $(document).ready(function(){
-        // Autofill unit price
-        $("#itemSelect").change(function(){
-            let price = $(this).find(':selected').data('price');
-            $("#unitPrice").val(price);
-            calcTotal();
-        });
+    function addItem() {
+        const itemSelect = document.getElementById('item');
+        const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+        const itemId = selectedOption.value;
+        const itemName = selectedOption.text;
+        const unitPrice = parseFloat(selectedOption.getAttribute('data-price'));
+        const quantity = parseInt(document.getElementById('quantity').value);
 
-        // Calculate total on units change
-        $("#units").on("input", function(){
-            calcTotal();
-        });
-
-        function calcTotal(){
-            let price = parseFloat($("#unitPrice").val()) || 0;
-            let units = parseInt($("#units").val()) || 0;
-            $("#totalAmount").val(price * units);
+        if (isNaN(quantity) || quantity <= 0) {
+            alert("Please enter a valid quantity.");
+            return;
         }
 
-        // Handle form submit with AJAX
-        $("#billForm").submit(function(e){
-            e.preventDefault();
-            $.post("bill", $(this).serialize(), function(data){
-                if(data.success){
-                    alert(data.success);
-                    loadBills();
-                } else {
-                    alert(data.error);
-                }
-            }, "json");
-        });
+        const subtotal = unitPrice * quantity;
 
-        // Load bills table without reload
-        function loadBills(){
-            $.get("bill/generate", function(data){
-                let rows = "";
-                data.forEach(b => {
-                    rows += `<tr>
-                    <td>${b.billId}</td>
-                    <td>${b.customerId}</td>
-                    <td>${b.itemId}</td>
-                    <td>${b.units}</td>
-                    <td>${b.unitPrice}</td>
-                    <td>${b.totalAmount}</td>
-                    <td>${b.dateTime}</td>
-                </tr>`;
-                });
-                $("#billTable tbody").html(rows);
-            }, "json");
-        }
-    });
+        // Add visual row to the table
+        const tableBody = document.querySelector("#billItemsTable tbody");
+        const newRow = tableBody.insertRow();
+        newRow.innerHTML = `
+            <td>${itemId}</td>
+            <td>${itemName}</td>
+            <td>${quantity}</td>
+            <td>${unitPrice.toFixed(2)}</td>
+            <td>${subtotal.toFixed(2)}</td>
+            <td><button type="button" onclick="removeItem(this)">Remove</button></td>
+        `;
+
+        // IMPORTANT: Add hidden inputs to the form for submission
+        const hiddenItemsDiv = document.getElementById('hidden-items');
+        hiddenItemsDiv.innerHTML += `
+            <input type="hidden" name="itemId" value="${itemId}">
+            <input type="hidden" name="quantity" value="${quantity}">
+            <input type="hidden" name="unitPrice" value="${unitPrice}">
+        `;
+
+        updateGrandTotal();
+    }
+
+    function removeItem(button) {
+        const row = button.parentNode.parentNode;
+        const itemId = row.cells[0].innerText;
+
+        // Remove the visual row
+        row.parentNode.removeChild(row);
+
+        // Remove the corresponding hidden inputs
+        const hiddenInputs = document.querySelectorAll(`#hidden-items input[value="${itemId}"]`);
+        hiddenInputs.forEach(input => input.parentElement.removeChild(input.nextElementSibling.nextElementSibling)); // remove unit price
+        hiddenInputs.forEach(input => input.parentElement.removeChild(input.nextElementSibling)); // remove quantity
+        hiddenInputs.forEach(input => input.parentElement.removeChild(input)); // remove item id
+
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+        let total = 0;
+        const tableRows = document.querySelectorAll("#billItemsTable tbody tr");
+        tableRows.forEach(row => {
+            total += parseFloat(row.cells[4].innerText);
+        });
+        document.getElementById('grandTotal').innerText = total.toFixed(2);
+    }
 </script>
 </body>
 </html>
