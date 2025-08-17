@@ -17,16 +17,16 @@ public class LoginServlet extends HttpServlet {
         String password = req.getParameter("password");
 
         if (ADMIN_USER.equals(username) && ADMIN_PASS.equals(password)) {
-            // ✅ Save user in session
+            // Save user in session
             HttpSession session = req.getSession();
             session.setAttribute("username", username);
 
             // Redirect to dashboard
             resp.sendRedirect(req.getContextPath() + "/dashboard.jsp");
         } else {
-            // ❌ Invalid login
+            //  Invalid login
             req.setAttribute("error", "Invalid username or password.");
-            req.getRequestDispatcher("/WEB-INF/login.jsp").forward(req, resp);
+            req.getRequestDispatcher("/login.jsp").forward(req, resp);
         }
     }
 
