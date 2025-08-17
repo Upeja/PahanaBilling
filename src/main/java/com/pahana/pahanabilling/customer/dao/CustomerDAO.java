@@ -12,13 +12,13 @@ public class CustomerDAO {
     private static final String USER = "root";
     private static final String PASSWORD = "upeja"; // change if needed
 
-    // ✅ Load MySQL driver when class is loaded
+    //  Load MySQL driver when class is loaded
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("✅ MySQL JDBC Driver loaded successfully for CustomerDAO.");
+            System.out.println(" MySQL JDBC Driver loaded successfully for CustomerDAO.");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("❌ MySQL JDBC Driver not found in classpath. Please add mysql-connector-j.", e);
+            throw new RuntimeException(" MySQL JDBC Driver not found in classpath. Please add mysql-connector-j.", e);
         }
     }
 
@@ -76,7 +76,7 @@ public class CustomerDAO {
         return null;
     }
 
-    // ✏️ Update customer
+    //  Update customer
     public void update(Customer customer) throws SQLException {
         String sql = "UPDATE customers SET name = ?, address = ?, phone = ?, units_consumed = ? WHERE account_number = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -90,7 +90,7 @@ public class CustomerDAO {
         }
     }
 
-    // ❌ Delete customer
+    //  Delete customer
     public void delete(String accountNumber) throws SQLException {
         String sql = "DELETE FROM customers WHERE account_number = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);

@@ -15,10 +15,6 @@ public class BillingService {
     private final BillDAO billDAO = new BillDAO();
     private final BillItemDAO billItemDAO = new BillItemDAO();
 
-    /**
-     * Create a bill with the given items, persist both the bill and items, and return
-     * the saved bill (including items loaded from DB).
-     */
     public Bill createAndSaveBill(String customerId, List<BillItem> items) throws SQLException {
         if (customerId == null || customerId.isEmpty()) {
             throw new IllegalArgumentException("customerId is required");
@@ -45,30 +41,24 @@ public class BillingService {
         bill.setTotalAmount(totalAmount);
         bill.setDateTime(LocalDateTime.now());
 
-        // Save bill (main record)
         int billId = billDAO.saveBill(bill);
         bill.setBillId(billId);
 
-        // Save each item line
         for (BillItem bi : items) {
             bi.setBillId(billId);
             billItemDAO.saveBillItem(bi);
         }
 
-        // Load back the full bill with items populated
         Bill saved = billDAO.findById(billId);
         return saved != null ? saved : bill;
     }
 
-    /**
-     * Convenience overload that accepts raw arrays as posted by the JSP.
-     */
     public Bill createAndSaveBill(String customerId, String[] itemIds, String[] quantities, String[] unitPrices) throws SQLException {
         if (itemIds == null || quantities == null || unitPrices == null) {
             throw new IllegalArgumentException("itemIds, quantities, and unitPrices are required");
         }
         if (itemIds.length == 0 || itemIds.length != quantities.length || itemIds.length != unitPrices.length) {
-            throw new IllegalArgumentException("Please provide matching arrays for items, quantities, and unit prices.");
+            throw new IllegalArgumentException("Mismatched item arrays.");
         }
 
         List<BillItem> items = new ArrayList<>(itemIds.length);
@@ -82,15 +72,7 @@ public class BillingService {
         return createAndSaveBill(customerId, items);
     }
 
-    /**
-     * Get a single bill by ID (with its items).
-     */
     public Bill getBillById(int billId) throws SQLException {
         return billDAO.findById(billId);
     }
-
-    // If you need a "listAllBills" method, add a corresponding getAllBills() in BillDAO and expose it here.
-    // public List<Bill> listAllBills() throws SQLException {
-    //     return billDAO.getAllBills();
-    // }
 }

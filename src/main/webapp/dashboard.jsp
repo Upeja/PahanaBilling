@@ -4,36 +4,53 @@
 <head>
   <title>📊 Pahana Bookshop Dashboard</title>
   <style>
-    /* Dark theme background */
+    /* Dark gradient background */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #121212;
+      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
       color: #fff;
       margin: 0;
       padding: 0;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 50px auto;
       padding: 40px 30px;
-      background-color: #1e1e1e;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      background: rgba(30, 30, 30, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .logo {
-      font-size: 50px;
+      font-size: 55px;
       text-align: center;
       margin-bottom: 10px;
       color: #ffb74d;
+      text-shadow: 0 0 15px rgba(255,183,77,0.6);
     }
 
     .session-info {
       text-align: right;
       font-size: 14px;
       margin-bottom: 25px;
-      color: #aaa;
+      color: #bbb;
+    }
+
+    .session-info a {
+      color: #ffb74d;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .session-info a:hover {
+      text-decoration: underline;
     }
 
     h2 {
@@ -41,61 +58,67 @@
       color: #ffb74d;
       margin-bottom: 40px;
       font-size: 32px;
+      letter-spacing: 1px;
     }
 
-    /* Modern card-style menu in one row */
+    /* Responsive grid for menu */
     .menu {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: nowrap;
-      gap: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
     }
 
     .menu-card {
-      background-color: #2c2c2c;
-      padding: 25px 20px;
-      border-radius: 12px;
+      background: #2c2c2c;
+      padding: 35px 20px;
+      border-radius: 14px;
       text-align: center;
       font-size: 18px;
       font-weight: bold;
       transition: all 0.3s ease;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      flex: 1 1 0;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.6);
     }
 
-    .menu-card i, .menu-card span {
-      margin: 5px 0;
+    .menu-card i {
+      font-size: 34px;
+      margin-bottom: 12px;
+      color: #ffb74d;
+      transition: color 0.3s;
+    }
+
+    .menu-card span {
+      display: block;
+      margin-top: 5px;
     }
 
     .menu-card:hover {
-      transform: translateY(-5px) scale(1.03);
+      transform: translateY(-6px) scale(1.03);
       box-shadow: 0 12px 25px rgba(255,183,77,0.5);
-      background-color: #333333;
+      background: #333;
       color: #ffb74d;
+    }
+
+    .menu-card:hover i {
+      color: #ffa726;
     }
 
     .menu-card a {
       color: inherit;
       text-decoration: none;
-      width: 100%;
       display: block;
     }
 
     .footer {
       text-align: center;
       font-size: 13px;
-      color: #888;
-      margin-top: 35px;
+      color: #aaa;
+      margin-top: 40px;
     }
 
-    /* Icon styling */
-    .menu-card i {
-      font-size: 28px;
-      display: block;
+    .footer span {
+      color: #ffb74d;
+      font-weight: bold;
     }
   </style>
   <!-- FontAwesome for icons -->
@@ -129,13 +152,7 @@
     <div class="menu-card">
       <a href="${pageContext.request.contextPath}/bill">
         <i class="fas fa-file-invoice"></i>
-        <span>Generate Bill</span>
-      </a>
-    </div>
-    <div class="menu-card">
-      <a href="${pageContext.request.contextPath}/viewBills.jsp">
-        <i class="fas fa-clipboard-list"></i>
-        <span>View All Bills</span>
+        <span>Order Items</span>
       </a>
     </div>
     <div class="menu-card">
@@ -146,7 +163,9 @@
     </div>
   </div>
 
-  <div class="footer">Welcome to Pahana Bookshop! Enjoy your reading journey 📖</div>
+  <div class="footer">
+    Welcome to <span>Pahana Bookshop</span>! Enjoy your reading journey 📖
+  </div>
 </div>
 
 </body>

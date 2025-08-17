@@ -1,9 +1,7 @@
 package com.pahana.pahanabilling.billing.servlet;
 
-import com.pahana.pahanabilling.billing.dao.BillDAO;
-import com.pahana.pahanabilling.billing.dao.BillItemDAO;
 import com.pahana.pahanabilling.billing.entity.Bill;
-import com.pahana.pahanabilling.billing.entity.BillItem;
+import com.pahana.pahanabilling.billing.service.BillingService;
 import com.pahana.pahanabilling.customer.entity.Customer;
 import com.pahana.pahanabilling.customer.service.CustomerService;
 import com.pahana.pahanabilling.item.entity.Item;
@@ -18,20 +16,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(urlPatterns = "/bill")
 public class BillServlet extends HttpServlet {
 
-    // Services used to load dropdown data
+    private final BillingService billingService = new BillingService();
     private final CustomerService customerService = new CustomerService();
     private final ItemService itemService = new ItemService();
-
-    // DAOs used to persist the bill and bill items
-    private final BillDAO billDAO = new BillDAO();
-    private final BillItemDAO billItemDAO = new BillItemDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -46,9 +38,7 @@ public class BillServlet extends HttpServlet {
 
         req.setCharacterEncoding("UTF-8");
 
-        String customerId = req.getParameter("customerId");
-
-        // These come from hidden inputs created in bill.jsp addItem()
+        String customerId = req.getParameter("customerId"); // this is Customer.accountNumber
         String[] itemIds = req.getParameterValues("itemId");
         String[] quantities = req.getParameterValues("quantity");
         String[] unitPrices = req.getParameterValues("unitPrice");
@@ -61,74 +51,36 @@ public class BillServlet extends HttpServlet {
                 || itemIds.length == 0
                 || itemIds.length != quantities.length
                 || itemIds.length != unitPrices.length) {
-            sendBackWithError("Please add at least one item with valid quantity and unit price.", req, resp);
+            sendBackWithError("Please add at least one item with valid quantity and price.", req, resp);
             return;
         }
 
         try {
-            // 1) Compute total
-            double totalAmount = 0.0;
-            List<BillItem> itemsToSave = new ArrayList<>();
+            // Persist bill + items and get the saved bill (with items)
+            Bill savedBill = billingService.createAndSaveBill(customerId, itemIds, quantities, unitPrices);
 
-            for (int i = 0; i < itemIds.length; i++) {
-                String itemId = itemIds[i];
-                int qty = Integer.parseInt(quantities[i]);
-                double price = Double.parseDouble(unitPrices[i]);
-
-                if (qty <= 0 || price < 0) {
-                    sendBackWithError("Invalid quantity or price for item: " + itemId, req, resp);
-                    return;
-                }
-
-                double subtotal = qty * price;
-                totalAmount += subtotal;
-
-                BillItem bi = new BillItem();
-                bi.setItemId(itemId);
-                bi.setQuantity(qty);
-                bi.setUnitPrice(price);
-                bi.setSubtotal(subtotal);
-                itemsToSave.add(bi);
-            }
-
-            // 2) Save bill
-            Bill bill = new Bill();
-            bill.setCustomerId(customerId);
-            bill.setTotalAmount(totalAmount);
-            bill.setDateTime(LocalDateTime.now());
-
-            int billId = billDAO.saveBill(bill);
-
-            // 3) Save each bill item with the generated billId
-            for (BillItem bi : itemsToSave) {
-                bi.setBillId(billId);
-                billItemDAO.saveBillItem(bi);
-            }
-
-            // 4) Load the full bill (with items) and generate PDF
-            Bill savedBill = billDAO.findById(billId);
-
+            // Generate PDF
             String pdfDir = getServletContext().getRealPath("/generatepdf");
-            File dir = new File(pdfDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
+            File pdfFolder = new File(pdfDir);
+            if (!pdfFolder.exists()) {
+                pdfFolder.mkdirs();
             }
             File pdfFile = PdfExportUtil.generateBillPDF(savedBill, pdfDir);
 
-            // If you later use AJAX, you can return a small JSON payload
+            // AJAX?
             if ("XMLHttpRequest".equals(req.getHeader("X-Requested-With"))) {
                 resp.setContentType("application/json");
                 String json = String.format("{\"status\":\"OK\",\"billId\":%d,\"pdf\":\"%s\"}",
-                        billId, req.getContextPath() + "/generatepdf/" + pdfFile.getName());
+                        savedBill.getBillId(), req.getContextPath() + "/generatepdf/" + pdfFile.getName());
                 resp.getWriter().write(json);
                 return;
             }
 
-            // Normal form submit: open the PDF (note your form uses target="_blank")
+            // Normal submit (your form opens in a new tab due to target="_blank")
             resp.sendRedirect(req.getContextPath() + "/generatepdf/" + pdfFile.getName());
 
         } catch (NumberFormatException nfe) {
-            sendBackWithError("Invalid number format for quantity or price.", req, resp);
+            sendBackWithError("Invalid number format in quantity or price.", req, resp);
         } catch (SQLException sqle) {
             sqle.printStackTrace();
             sendBackWithError("Database error: " + sqle.getMessage(), req, resp);

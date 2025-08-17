@@ -17,16 +17,11 @@ import java.util.List;
 
 public class PdfExportUtil {
 
-    /**
-     * Generates a PDF for a Bill with multiple items, saves it to outputDir,
-     * and returns the created File.
-     */
     public static File generateBillPDF(Bill bill, String outputDir) throws Exception {
         if (bill == null) {
             throw new IllegalArgumentException("Bill cannot be null");
         }
 
-        // Ensure output directory exists
         File folder = new File(outputDir);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -37,6 +32,7 @@ public class PdfExportUtil {
 
         Document document = new Document(PageSize.A4, 36, 36, 36, 36);
 
+        // IMPORTANT: Close the document before the stream auto-closes
         try (FileOutputStream fos = new FileOutputStream(file)) {
             PdfWriter.getInstance(document, fos);
             document.open();
@@ -66,7 +62,7 @@ public class PdfExportUtil {
 
             document.add(Chunk.NEWLINE);
 
-            // Items table (Item ID | Qty | Unit Price | Subtotal)
+            // Items table
             List<BillItem> items = bill.getItems();
 
             PdfPTable table = new PdfPTable(4);
@@ -74,7 +70,6 @@ public class PdfExportUtil {
             table.setSpacingBefore(5f);
             table.setWidths(new float[]{2.5f, 1.2f, 1.6f, 1.7f});
 
-            // Header cells
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.WHITE);
             Color headerBg = new Color(40, 55, 77);
 
@@ -82,7 +77,6 @@ public class PdfExportUtil {
             PdfPCell h2 = new PdfPCell(new Phrase("Qty", headerFont));
             PdfPCell h3 = new PdfPCell(new Phrase("Unit Price (LKR)", headerFont));
             PdfPCell h4 = new PdfPCell(new Phrase("Subtotal (LKR)", headerFont));
-
             for (PdfPCell h : new PdfPCell[]{h1, h2, h3, h4}) {
                 h.setHorizontalAlignment(Element.ALIGN_CENTER);
                 h.setBackgroundColor(headerBg);
@@ -149,7 +143,7 @@ public class PdfExportUtil {
             thanks.setAlignment(Element.ALIGN_CENTER);
             document.add(thanks);
 
-        } finally {
+            // Close BEFORE leaving the try-with-resources block
             document.close();
         }
 

@@ -10,17 +10,17 @@ public class ItemDAO {
     private static final String USER = "root";
     private static final String PASSWORD = "upeja"; // change this if needed
 
-    // ✅ Static block to ensure MySQL driver is loaded
+    // Static block to ensure MySQL driver is loaded
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("✅ MySQL JDBC Driver loaded successfully.");
+            System.out.println(" MySQL JDBC Driver loaded successfully.");
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("❌ MySQL JDBC Driver not found. Please add mysql-connector-j to your classpath.", e);
+            throw new RuntimeException(" MySQL JDBC Driver not found. Please add mysql-connector-j to your classpath.", e);
         }
     }
 
-    // 🔽 Save New Item
+    //  Save New Item
     public void save(Item item) throws SQLException {
         String sql = "INSERT INTO items (item_id, name, price) VALUES (?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -32,7 +32,7 @@ public class ItemDAO {
         }
     }
 
-    // 🔽 Get All Items
+    //  Get All Items
     public List<Item> getAllItems() throws SQLException {
         List<Item> items = new ArrayList<>();
         String sql = "SELECT * FROM items";
@@ -50,7 +50,7 @@ public class ItemDAO {
         return items;
     }
 
-    // 🔽 Get One Item by ID
+    //  Get One Item by ID
     public Item findById(String itemId) throws SQLException {
         String sql = "SELECT * FROM items WHERE item_id = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -68,7 +68,7 @@ public class ItemDAO {
         return null;
     }
 
-    // 🔽 Update Existing Item
+    //  Update Existing Item
     public void update(Item item) throws SQLException {
         String sql = "UPDATE items SET name = ?, price = ? WHERE item_id = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -80,7 +80,7 @@ public class ItemDAO {
         }
     }
 
-    // 🔽 Delete Item
+    // Delete Item
     public void delete(String itemId) throws SQLException {
         String sql = "DELETE FROM items WHERE item_id = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -90,7 +90,7 @@ public class ItemDAO {
         }
     }
 
-    // ✅ Check if item exists
+    //  Check if item exists
     public boolean exists(String itemId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM items WHERE item_id = ?";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
